@@ -1,9 +1,0 @@
-# PyCharm
-.idea/
-
-# Python
-__pycache__/
-*.pyc
-
-# Системные файлы
-.DS_Store
