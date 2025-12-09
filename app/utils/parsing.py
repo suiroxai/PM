@@ -57,7 +57,7 @@ class Parser:
             url = f"https://www.ozon.ru/search/?text={query}&from_global=true"
             page = await self.browser_ozon.new_page()
             await page.goto(url, timeout=30000)
-            await page.wait_for_selector("div.yc1_11.tsCompactControl500Medium.y1c_11", timeout=10000)
+            await page.wait_for_selector("div.container", timeout=10000)
             await page.evaluate("window.scrollBy(0, 3500)")
             await page.wait_for_timeout(2000)
             items = await page.eval_on_selector_all(

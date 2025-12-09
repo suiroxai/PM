@@ -32,6 +32,13 @@ async def read_root(request: Request):
 async def search_query(query: str):
     return await app.state.parser.search(query)
 
+@app.get("/api/search_ozon/{query}")   #Докрутить асинхронность
+async def search_query(query: str):
+    return await app.state.parser.search_ozon(query)
+
+@app.get("/api/search_wb/{query}")   #Докрутить асинхронность
+async def search_query(query: str):
+    return await app.state.parser.search_wb(query)
 #uvicorn app:app --host 0.0.0.0 --port 8000
 #http://127.0.0.1:8000/wb?query=
 
