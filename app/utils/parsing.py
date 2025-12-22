@@ -1,15 +1,13 @@
 from camoufox.async_api import AsyncCamoufox
 import asyncio
-
 import logging
-import asyncio
-from camoufox.async_api import AsyncCamoufox
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
 
 class Parser:
     def __init__(self):
@@ -25,7 +23,6 @@ class Parser:
         self.browser_wb = await self.playwright_wb.__aenter__()
         self.browser_ozon = await self.playwright_ozon.__aenter__()
 
-
     async def close(self):
         if self.browser_wb:
             await self.playwright_wb.__aexit__(None, None, None)
@@ -35,9 +32,18 @@ class Parser:
     async def search_wb(self, query: str) -> list[dict]:
         try:
             url = f"https://www.wildberries.ru/catalog/0/search.aspx?search={query}"
+            logger.info(f"WB: Запуск поиска '{query}'")
+
             page = await self.browser_wb.new_page()
             await page.goto(url, timeout=30000)
-            await page.wait_for_selector("h1", timeout=30000)
+
+            try:
+                await page.wait_for_selector("h1", timeout=30000)
+            except Exception:
+                logger.error("WB: Заголовок не найден. Возможно, капча или пустая выдача.")
+                await page.close()
+                return []
+
             items = await page.eval_on_selector_all(
                 "article.product-card.j-card-item.j-analitics-item",
                 """
@@ -56,14 +62,17 @@ class Parser:
                 })
                 """)
 
+            logger.info(f"WB: Успешно собрано {len(items)} товаров")
             await page.close()
             return items
         except Exception as e:
+            logger.error(f"WB: Ошибка метода search: {e}")
+            if 'page' in locals(): await page.close()
             return [{"error": str(e)}]
 
     async def search_ozon(self, query: str) -> list[dict]:
         """
-        Универсальный парсер Ozon: исправлены цены и количество товаров.
+        Исправленный парсер Ozon. Улучшен поиск названий.
         """
         try:
             url = f"https://www.ozon.ru/search/?text={query}&from_global=true"
@@ -71,13 +80,13 @@ class Parser:
 
             page = await self.browser_ozon.new_page()
 
-            # Устанавливаем таймаут и ждем загрузки (с учетом редиректов на бренды)
+            # Устанавливаем таймаут и ждем загрузки
             try:
                 await page.goto(url, timeout=45000, wait_until="load")
             except Exception as e:
                 logger.warning(f"Ozon: Страница загружена частично: {e}")
 
-            # Ждем появления хотя бы одного товара
+            # Ждем появления товаров
             try:
                 await page.wait_for_selector("a[href*='/product/']", timeout=15000)
             except Exception:
@@ -85,11 +94,11 @@ class Parser:
                 await page.close()
                 return []
 
-            # --- УЛУЧШЕННЫЙ СКРОЛЛИНГ ---
-            # Скроллим 4 раза по чуть-чуть, чтобы Ozon успел подгрузить Lazy Load блоки
+            # --- СКРОЛЛИНГ ---
+            # Немного прокручиваем страницу, чтобы подгрузить товары
             for i in range(4):
                 await page.evaluate("window.scrollBy(0, 1200)")
-                await page.wait_for_timeout(1000)  # Даем время на рендеринг
+                await page.wait_for_timeout(1000)
 
             # --- СБОР ДАННЫХ ---
             items = await page.evaluate("""
@@ -97,7 +106,7 @@ class Parser:
                     const results = [];
                     const seenLinks = new Set(); 
 
-                    // Ищем все плитки товаров через атрибуты и классы
+                    // Ищем все плитки товаров
                     const cards = document.querySelectorAll('[data-widget*="tile"], [class*="tile-root"], .tile-root');
 
                     cards.forEach(card => {
@@ -107,29 +116,56 @@ class Parser:
                         const link = linkEl.href.split('?')[0]; 
                         if (seenLinks.has(link)) return;
 
-                        // ИСПРАВЛЕНИЕ ЦЕНЫ: Ищем только актуальную цену
-                        // Ozon часто ставит актуальную цену в первый span с символом ₽
+                        // 1. ПОИСК ЦЕНЫ
                         let price = null;
                         const priceSpans = Array.from(card.querySelectorAll('span'))
                             .filter(s => s.innerText.includes('₽'));
 
                         if (priceSpans.length > 0) {
-                            // Берем только ПЕРВЫЙ найденный элемент с рублем (это обычно текущая цена)
-                            // и очищаем его от всего, кроме цифр
                             const rawPrice = priceSpans[0].innerText.replace(/[^0-9]/g, '');
                             if (rawPrice.length > 1 && rawPrice.length < 9) {
                                 price = rawPrice;
                             }
                         }
 
-                        if (!price) return; // Пропускаем товары без цены
+                        if (!price) return; // Если цены нет, пропускаем
 
-                        // ИСПРАВЛЕНИЕ НАЗВАНИЯ: Ищем в стандартных классах Ozon
-                        const nameEl = card.querySelector('span.tsBody500Medium, span.tsBody400Small, [class*="tsBody"]');
-                        const name = nameEl ? nameEl.innerText.trim() : "Товар Ozon";
+                        // 2. ПОИСК НАЗВАНИЯ (Улучшенная логика)
+                        let name = null;
 
-                        // КАРТИНКА
+                        // Шаг А: Пробуем найти по конкретным классам заголовков Ozon
+                        const specificTitle = card.querySelector('span.tsBody500Medium, span.tsBodyL, span.tsBodyM');
+                        if (specificTitle && specificTitle.innerText.length > 3) {
+                            name = specificTitle.innerText.trim();
+                        }
+
+                        // Шаг Б: Если не нашли, ищем самый длинный текст, исключая мусор
+                        if (!name) {
+                            const candidates = Array.from(linkEl.querySelectorAll('span, div'))
+                                .filter(el => {
+                                    const text = el.innerText.trim();
+                                    return text.length > 3 &&  // Снизил порог с 10 до 3
+                                           !text.includes('₽') &&
+                                           !/^\d+$/.test(text) && // Не цифры
+                                           !/^\d+ \/ \d+$/.test(text) && // Не счетчик фото (1/5)
+                                           !['Распродажа', 'Бестселлер', 'Новинка', 'Ozon Карта', 'Express', 'Оригинал', 'Хит', 'Скидка'].some(bad => text.includes(bad));
+                                });
+
+                            if (candidates.length > 0) {
+                                // Сортируем по длине (самый длинный - скорее всего название)
+                                name = candidates.sort((a, b) => b.innerText.length - a.innerText.length)[0].innerText.trim();
+                            }
+                        }
+
+                        // Если все еще нет названия, ставим заглушку
+                        if (!name) name = "Товар Ozon";
+
+                        // 3. КАРТИНКА
                         const imgEl = card.querySelector('img');
+
+                        // 4. РЕЙТИНГ (Заглушка)
+                        let rating = "4.9";
+                        let reviews = "0";
 
                         seenLinks.add(link);
                         results.push({
@@ -138,8 +174,8 @@ class Parser:
                             price: price,
                             link: link,
                             img: imgEl ? imgEl.src : null,
-                            rating: "4.9", 
-                            reviews_qty: "Ozon"
+                            rating: rating, 
+                            reviews_qty: reviews
                         });
                     });
 
@@ -157,6 +193,11 @@ class Parser:
             return []
 
     async def search(self, query: str) -> list[dict]:
-            results_wb, results_ozon  = await asyncio.gather(self.search_wb(query), self.search_ozon(query),
-                                                             return_exceptions=True)
-            return results_wb + results_ozon
+        results_wb, results_ozon = await asyncio.gather(self.search_wb(query), self.search_ozon(query),
+                                                        return_exceptions=True)
+
+        final_results = []
+        if isinstance(results_wb, list): final_results.extend(results_wb)
+        if isinstance(results_ozon, list): final_results.extend(results_ozon)
+
+        return final_results

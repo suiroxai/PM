@@ -2,207 +2,189 @@
 <html lang="ru" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛒 Price Compare - Сравнение цен</title>
-    <!-- Bootstrap 5 CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Price Hunter Pro — Сравнение цен</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome Icons -->
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="../static/style.css">
 </head>
+
 <body class="bg-dark text-light">
 
-<!-- Header -->
-<header class="py-4">
+<header>
     <div class="container">
-        <div class="row align-items-center mb-4">
+
+        <div class="row align-items-center gy-4">
             <div class="col-lg-6">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="floating-element">
-                        <i class="fas fa-shopping-cart fa-2x text-primary"></i>
+                <div class="brand-title mb-3 d-flex align-items-center gap-3">
+                    <div class="brand-icon fs-2 text-primary">
+                        <i class="fa-solid fa-cart-shopping"></i>
                     </div>
                     <div>
-                        <h1 class="h2 mb-1 fw-800 text-gradient">🛒 Price Hunter Pro</h1>
-                        <p class="text-muted mb-0">Находите лучшие предложения на всех маркетплейсах</p>
+                        <h1 class="h4 mb-0 fw-bold">Price Hunter Pro</h1>
+                        <p class="brand-sub small text-muted mb-0">Поиск лучших цен</p>
                     </div>
                 </div>
-                <div class="stats-card d-inline-flex gap-4 p-3">
-                    <div class="text-center">
-                        <div class="stats-number" id="totalProducts">0</div>
-                        <small class="text-muted">Товаров</small>
-                    </div>
-                    <div class="text-center">
-                        <div class="stats-number" id="avgPrice">0</div>
-                        <small class="text-muted">Средняя цена</small>
-                    </div>
-                    <div class="text-center">
-                        <div class="stats-number" id="minPrice">0</div>
-                        <small class="text-muted">Минимум</small>
+
+                <div class="stats-wrapper">
+                    <div class="stats-card">
+                        <div class="stat-item">
+                            <div class="stats-number" id="totalProducts">0</div>
+                            <span class="stat-label">Товаров</span>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stats-number" id="avgPrice">0</div>
+                            <span class="stat-label">Средняя</span>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stats-number" id="minPrice">0</div>
+                            <span class="stat-label">Минимум</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-6 mt-4 mt-lg-0">
-                <div class="input-group input-group-lg shadow-lg">
-                    <span class="input-group-text bg-dark border-end-0">
-                        <i class="fas fa-search text-primary"></i>
+            <div class="col-lg-6">
+                <div class="input-group input-group-lg shadow-sm" role="search">
+                    <span class="input-group-text bg-transparent border-end-0">
+                        <i class="fa-solid fa-magnifying-glass text-primary"></i>
                     </span>
-                    <input type="text" id="searchInput"
-                           class="form-control bg-dark text-light border-start-0"
-                           placeholder="Например: iPhone 14, наушники, ноутбук..."
-                           data-tooltip="Введите название товара для поиска">
-                    <button id="searchBtn" class="btn btn-outline-primary px-4">
-                        <span class="search-icon">Поиск</span>
-                        <span class="loader-icon spinner-border spinner-border-sm ms-2" style="display:none;"></span>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        class="form-control border-start-0"
+                        placeholder="iPhone 15, Dyson, Lego..."
+                        data-tooltip="Введите название товара"
+                    >
+
+                    <button id="searchBtn" class="btn btn-primary px-4">
+                        <span class="search-icon"><i class="fa-solid fa-arrow-right"></i></span>
+                        <span class="loader-icon spinner-border spinner-border-sm" style="display:none;"></span>
                     </button>
                 </div>
 
-                <!-- Quick Suggestions -->
                 <div class="mt-3">
-                    <small class="text-muted mb-2 d-block">Популярные запросы:</small>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button class="btn btn-sm btn-outline-secondary quick-search" data-query="смартфон">📱 Смартфоны</button>
-                        <button class="btn btn-sm btn-outline-secondary quick-search" data-query="ноутбук">💻 Ноутбуки</button>
-                        <button class="btn btn-sm btn-outline-secondary quick-search" data-query="наушники">🎧 Наушники</button>
-                        <button class="btn btn-sm btn-outline-secondary quick-search" data-query="часы">⌚ Часы</button>
+                    <div class="filters-container"> <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-secondary quick-search" data-query="смартфон">
+                                <i class="fa-solid fa-mobile-screen-button"></i> Смартфоны
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary quick-search" data-query="ноутбук">
+                                <i class="fa-solid fa-laptop"></i> Ноутбуки
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary quick-search" data-query="наушники">
+                                <i class="fa-solid fa-headphones"></i> Наушники
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary quick-search" data-query="кофемашина">
+                                <i class="fa-solid fa-mug-hot"></i> Кофе
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Enhanced Market Filter -->
-        <div class="row">
+        <div class="row mt-4 align-items-center gy-3">
             <div class="col-md-8">
-                <div class="filter-toggle p-2">
-                    <button type="button" data-market="all" class="filter-btn active">
-                        <i class="fas fa-globe me-2"></i>Все площадки
-                    </button>
-                    <button type="button" data-market="wb" class="filter-btn">
-                        <i class="fas fa-store me-2"></i>Wildberries
-                    </button>
-                    <button type="button" data-market="ozon" class="filter-btn">
-                        <i class="fas fa-bolt me-2"></i>Ozon
-                    </button>
+                <div class="filters-container">
+                    <div class="filter-toggle">
+                        <button class="filter-btn active" data-market="all">
+                            Все
+                        </button>
+                        <button class="filter-btn" data-market="wb">
+                            Wildberries
+                        </button>
+                        <button class="filter-btn" data-market="ozon">
+                            Ozon
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4 mt-3 mt-md-0">
-                <div class="d-flex justify-content-end align-items-center gap-3">
-                    <span class="text-muted">Сортировка:</span>
-                    <select id="sortSelect" class="form-select bg-dark w-auto">
-                        <option value="price_asc"><i class="fas fa-arrow-up me-2"></i>Цена ↑</option>
-                        <option value="price_desc"><i class="fas fa-arrow-down me-2"></i>Цена ↓</option>
-                        <option value="rating_desc"><i class="fas fa-star me-2"></i>Рейтинг</option>
-                        <option value="reviews_desc"><i class="fas fa-comment me-2"></i>Отзывы</option>
+
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex justify-content-md-end align-items-center gap-2">
+                    <i class="fa-solid fa-arrow-up-wide-short text-muted"></i>
+                    <select id="sortSelect" class="form-select form-select-sm w-auto">
+                        <option value="price_asc">Сначала дешевые</option>
+                        <option value="price_desc">Сначала дорогие</option>
+                        <option value="rating_desc">По рейтингу</option>
                     </select>
                 </div>
             </div>
         </div>
+
     </div>
 </header>
 
-<!-- Stats Bar -->
-<section class="container mb-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div id="resultsCount" class="fw-bold"></div>
-                <div class="d-flex gap-2">
-                    <button id="toggleView" class="btn btn-outline-secondary btn-sm" data-view="grid">
-                        <i class="fas fa-th"></i>
-                    </button>
-                    <button id="exportBtn" class="btn btn-outline-success btn-sm">
-                        <i class="fas fa-download me-2"></i>Экспорт
-                    </button>
-                </div>
-            </div>
+<section class="container my-3">
+    <div class="d-flex justify-content-between align-items-center px-2">
+        <div id="resultsCount" class="text-muted small fw-bold"></div>
+
+        <div class="d-flex gap-2">
+            <button id="toggleView" class="btn btn-outline-secondary btn-sm d-none d-md-inline-block" data-view="grid">
+                <i class="fa-solid fa-th"></i>
+            </button>
+            <button id="exportBtn" class="btn btn-success btn-sm d-flex align-items-center gap-2">
+                <i class="fa-solid fa-file-csv"></i> <span class="d-none d-sm-inline">Экспорт</span>
+            </button>
         </div>
     </div>
 </section>
 
-<!-- Results -->
-<main class="container">
-    <div id="results" class="row g-4"></div>
+<main class="container mb-5">
 
-    <!-- Loading State -->
-    <div id="loadingState" class="text-center py-5" style="display: none;">
-        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
-        <h4 class="text-muted">Ищем лучшие предложения...</h4>
-        <p class="text-muted">Это может занять несколько секунд</p>
+    <div id="results" class="products-grid"></div>
+
+    <div id="loadingState" class="text-center py-5" style="display:none;">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <h5 class="fw-light">Сканируем маркетплейсы...</h5>
     </div>
 
-    <!-- Empty State -->
     <div id="emptyState" class="text-center py-5">
-        <div class="empty-icon mb-4">
-            <i class="fas fa-search fa-4x"></i>
+        <div class="mb-4 opacity-50">
+            <i class="fa-brands fa-searchengin fa-5x"></i>
         </div>
-        <h3 class="text-muted mb-3">Готовы к поиску!</h3>
-        <p class="text-muted mb-4">Введите название товара выше или выберите популярный запрос</p>
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">💡 Советы для поиска:</h5>
-                        <ul class="text-start text-muted">
-                            <li>Используйте конкретные названия товаров</li>
-                            <li>Указывайте модель и производителя</li>
-                            <li>Проверяйте цены на разных площадках</li>
-                            <li>Сравнивайте рейтинги и отзывы</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <h3 class="fw-bold">Найдем любую цену</h3>
+        <p class="text-muted mb-4 mx-auto" style="max-width: 400px;">
+            Введите название товара, и мы сравним предложения на Wildberries и Ozon в реальном времени.
+        </p>
     </div>
 
-    <!-- Error State -->
-    <div id="errorState" class="text-center py-5" style="display: none;">
-        <div class="empty-icon mb-3 text-danger">
-            <i class="fas fa-exclamation-triangle fa-4x"></i>
+    <div id="errorState" class="text-center py-5" style="display:none;">
+        <div class="mb-3 text-danger opacity-75">
+            <i class="fa-solid fa-wifi fa-4x"></i>
         </div>
-        <h3 class="text-danger mb-3">Ошибка загрузки</h3>
-        <p id="errorMessage" class="text-muted mb-4"></p>
-        <button id="retryBtn" class="btn btn-outline-primary">
-            <i class="fas fa-redo me-2"></i>Попробовать снова
+        <h4 class="text-white">Упс, ошибка связи</h4>
+        <p id="errorMessage" class="text-muted mb-4">Не удалось получить данные</p>
+        <button id="retryBtn" class="btn btn-outline-light px-4">
+            Повторить
         </button>
     </div>
+
 </main>
 
-<!-- Footer -->
-<footer class="mt-5 py-4 border-top border-secondary">
-    <div class="container">
-        <div class="row">
+<footer class="py-4 mt-auto border-top border-secondary border-opacity-10">
+    <div class="container text-center text-md-start">
+        <div class="row align-items-center gy-3">
             <div class="col-md-6">
-                <h5 class="mb-3">🛒 Price Hunter Pro</h5>
-                <p class="text-muted small">
-                    Сервис сравнения цен на маркетплейсах.
-                    Находите лучшие предложения и экономьте на покупках.
+                <p class="small text-muted mb-0">
+                    &copy; 2026 Price Hunter Pro. Beta Version.
                 </p>
-            </div>
-            <div class="col-md-6 text-md-end">
-                <div class="mb-3">
-                    <small class="text-muted">Поддерживаемые площадки:</small>
-                    <div class="mt-2">
-                        <span class="badge source-wb me-2">Wildberries</span>
-                        <span class="badge source-ozon">Ozon</span>
-                    </div>
-                </div>
-                <div class="text-muted small">
-                    <i class="fas fa-sync-alt me-1"></i> Данные обновляются в реальном времени
-                </div>
             </div>
         </div>
     </div>
 </footer>
 
-<!-- Toast Container -->
-<div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;"></div>
+<div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="../static/script.js"></script>
+
 </body>
 </html>

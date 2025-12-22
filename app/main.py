@@ -38,5 +38,4 @@ async def search_query(query: str):
 
 
 
-#docker-compose up --build
-#
+#docker-compose up --build    <---- первый раз (для сборки докера) аня...
