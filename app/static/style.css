@@ -1,7 +1,3 @@
-/* =====================================================
-   Price Hunter Pro — Cosmic Neon (Fixed & Stable)
-   ===================================================== */
-
 :root {
     /* --- ПАЛИТРА: Deep Cosmic --- */
     --bg-body: #050511;
@@ -115,12 +111,12 @@ header {
 }
 
 /* =======================
-   SEARCH INPUT (CRITICAL FIX)
+   SEARCH INPUT
    ======================= */
 /* Стилизуем стандартный класс .input-group */
 .input-group {
     display: flex;
-    flex-wrap: nowrap !important; /* ВАЖНО: Запрещаем перенос, чтобы инпут не исчезал */
+    flex-wrap: nowrap !important;
     align-items: center;
 
     background: rgba(20, 25, 45, 0.6);
@@ -154,7 +150,7 @@ header {
     height: 100%;
 }
 
-/* Поле ввода - FIX */
+/* Поле ввода */
 #searchInput, .form-control {
     flex: 1 1 auto !important; /* Растягиваем на все место */
     width: 1% !important; /* Хак для флексбокса */
