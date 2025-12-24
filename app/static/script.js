@@ -52,16 +52,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 favoritesList.style.display = 'grid';
                 favoritesList.innerHTML = favorites.map(item => getGridHtml(item, 0, true)).join('');
 
-                // Вешаем обработчики на сердечки в модалке
+                // Вешаем обработчики на сердечки в модалке (УДАЛЕНИЕ ПРИ КЛИКЕ)
                 favoritesList.querySelectorAll('.favorite-btn').forEach(btn => {
                     btn.onclick = (e) => {
                         e.preventDefault();
                         const link = btn.dataset.link;
+                        // Находим товар и удаляем его
                         toggleFavorite(favorites.find(p => p.link === link));
-                        // Перерисовываем модалку сразу
-                        updateFavoritesUI();
-                        // И основной список, если он есть
-                        if (products.length > 0) render();
                     };
                 });
             }
@@ -82,12 +79,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
         localStorage.setItem('favorites', JSON.stringify(favorites));
         updateFavoritesUI();
-        // Обновляем иконку в основном списке если товар там есть
-        const btn = document.querySelector(`.favorite-btn[data-link="${product.link}"]`);
-        if(btn) {
-             btn.classList.toggle('active');
-             btn.innerHTML = btn.classList.contains('active') ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
-        }
+
+        // Обновляем иконку во всех местах (в списке-плитке и в списке-строках)
+        const btns = document.querySelectorAll(`.favorite-btn[data-link="${product.link}"], .favorite-btn-list[data-link="${product.link}"]`);
+
+        btns.forEach(btn => {
+            const isFav = favorites.some(p => p.link === product.link);
+
+            // Если это кнопка на плитке (Grid) или в модалке
+            if (btn.classList.contains('favorite-btn')) {
+                if(isFav) {
+                    btn.classList.add('active');
+                    btn.innerHTML = '<i class="fa-solid fa-heart"></i>';
+                } else {
+                    btn.classList.remove('active');
+                    btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+                }
+            }
+
+            // Если это кнопка в списке (List View)
+            if (btn.classList.contains('favorite-btn-list')) {
+                if(isFav) {
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                    btn.innerHTML = '<i class="fa-solid fa-heart"></i>';
+                } else {
+                    btn.classList.add('btn-outline-danger');
+                    btn.classList.remove('btn-danger');
+                    btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+                }
+            }
+        });
     }
 
     updateFavoritesUI(); // Первый запуск
@@ -136,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function saveHistory(query) {
         if (!query) return;
-        searchHistory = [query, ...searchHistory.filter(item => item !== query)].slice(0, 8);
+        searchHistory = [query, ...searchHistory.filter(item => item !== query)].slice(8);
         localStorage.setItem("search_history", JSON.stringify(searchHistory));
         renderHistory();
     }
@@ -248,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Генерируем 24 скелетона (чтобы хватало на большие экраны при уменьшении масштаба)
         if(skeletonGrid) {
-            skeletonGrid.innerHTML = Array(24).fill('<div class="skeleton-card"></div>').join('');
+            skeletonGrid.innerHTML = Array(27).fill('<div class="skeleton-card"></div>').join('');
         }
 
         // Запуск советов
@@ -317,11 +339,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 currentView === 'grid' ? getGridHtml(item, minPrice) : getListHtml(item, minPrice)
             ).join('');
 
-            // Навешиваем события на сердечки
-            document.querySelectorAll('.favorite-btn').forEach(btn => {
+            // Навешиваем события на сердечки (поддерживаем и Grid и List классы)
+            document.querySelectorAll('.favorite-btn, .favorite-btn-list').forEach(btn => {
                 btn.onclick = (e) => {
                     e.preventDefault();
-                    // Находим товар по ссылке
                     const link = btn.dataset.link;
                     const product = list.find(p => p.link === link);
                     toggleFavorite(product);
@@ -405,7 +426,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </div>
             <div class="d-flex flex-column gap-2 ms-3">
-                 <button class="btn btn-sm ${isFav ? 'btn-danger' : 'btn-outline-danger'} favorite-btn-list" onclick="event.preventDefault(); document.querySelector('.favorite-btn[data-link=\\'${p.link}\\']').click()">
+                 <button class="btn btn-sm ${isFav ? 'btn-danger' : 'btn-outline-danger'} favorite-btn-list" data-link="${p.link}">
                     <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
                 </button>
                 <a href="${p.link}" target="_blank" class="list-btn btn btn-outline-light btn-sm"><i class="fa-solid fa-arrow-right"></i></a>

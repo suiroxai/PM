@@ -87,7 +87,6 @@
                             <button class="btn btn-sm btn-outline-secondary quick-search" data-query="наушники">
                                 <i class="fa-solid fa-headphones"></i> Наушники
                             </button>
-                            <!-- Вернули Кроссовки -->
                             <button class="btn btn-sm btn-outline-secondary quick-search" data-query="кроссовки">
                                 <i class="fa-solid fa-shoe-prints"></i> Кроссовки
                             </button>
@@ -110,7 +109,6 @@
 
             <div class="col-md-4 text-md-end">
                 <div class="d-flex justify-content-md-end align-items-center gap-2">
-                    <!-- Кнопка Избранного теперь скругленная (rounded-pill) -->
                     <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#favoritesModal">
                         <i class="fa-solid fa-heart"></i>
                         <span class="d-none d-sm-inline">Избранное</span>
@@ -149,20 +147,7 @@
 
 <main class="container mb-5">
 
-    <div id="results" class="products-grid"></div>
-
-    <!-- Скелетоны + Советы (Loading State) -->
-    <div id="loadingState" style="display:none;">
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary mb-2" role="status"></div>
-            <h5 class="fw-light mb-1">Поиск товаров...</h5>
-            <p id="loadingTip" class="text-muted small fst-italic opacity-75 mb-0"></p>
-        </div>
-
-        <!-- Сетка скелетонов -->
-        <div class="products-grid opacity-50" id="skeletonGrid"></div>
-    </div>
-
+    <!-- Стандартное приветствие -->
     <div id="emptyState" class="text-center py-5">
         <div class="mb-4 opacity-50">
             <i class="fa-brands fa-searchengin fa-5x"></i>
@@ -173,6 +158,18 @@
         </p>
     </div>
 
+    <!-- Результаты поиска -->
+    <div id="results" class="products-grid"></div>
+
+    <div id="loadingState" style="display:none;">
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary mb-2" role="status"></div>
+            <h5 class="fw-light mb-1">Охота началась...</h5>
+            <p id="loadingTip" class="text-muted small fst-italic opacity-75 mb-0"></p>
+        </div>
+        <div class="products-grid opacity-50" id="skeletonGrid"></div>
+    </div>
+
     <div id="errorState" class="text-center py-5" style="display:none;">
         <div class="mb-3 text-danger opacity-75">
             <i class="fa-solid fa-wifi fa-4x"></i>
@@ -181,6 +178,163 @@
         <p id="errorMessage" class="text-muted mb-4">Не удалось получить данные</p>
         <button id="retryBtn" class="btn btn-outline-light px-4">Повторить</button>
     </div>
+
+    <!-- === СЕКЦИЯ ПОПУЛЯРНОЕ / РЕКЛАМА (ВНИЗУ) === -->
+    <div id="promoSection" class="mt-5 pt-4 border-top border-secondary border-opacity-10">
+        <h4 class="mb-4 fw-bold d-flex align-items-center gap-2">
+            <i class="fa-solid fa-fire text-warning"></i> ПОПУЛЯРНОЕ СЕГОДНЯ
+        </h4>
+
+        <!-- Большие баннеры -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="ad-banner ad-banner-primary p-4 rounded-4 position-relative overflow-hidden">
+                    <div class="position-relative z-2">
+                        <small class="text-white-50 d-block mb-1 text-uppercase fw-bold" style="font-size: 0.7rem;">Реклама</small>
+                        <div class="bg-white bg-opacity-25 rounded-circle d-inline-flex p-3 mb-3 backdrop-blur-sm">
+                            <i class="fa-solid fa-bullhorn fa-2x text-white"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2 text-white">Место для вашей рекламы</h3>
+                        <p class="text-white opacity-75 small mb-0">Привлекайте клиентов ярко</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="ad-banner ad-banner-secondary p-4 rounded-4 position-relative overflow-hidden">
+                    <div class="position-relative z-2">
+                        <small class="text-white-50 d-block mb-1 text-uppercase fw-bold" style="font-size: 0.7rem;">Реклама</small>
+                        <div class="bg-white bg-opacity-25 rounded-circle d-inline-flex p-3 mb-3 backdrop-blur-sm">
+                            <i class="fa-solid fa-bolt fa-2x text-white"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2 text-white">Рекламное место</h3>
+                        <p class="text-white opacity-75 small mb-0">Ваш баннер мог быть здесь</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9 Ярких Рекламных Карточек Товаров -->
+        <div class="products-grid">
+            <!-- 1 -->
+            <div class="card ad-card ad-card-vibrant-1">
+                <div class="card-img-container bg-transparent d-flex align-items-center justify-content-center position-relative" style="height: 180px;">
+                    <small class="position-absolute top-0 start-0 m-3 text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Реклама</small>
+                    <i class="fa-solid fa-ad fa-4x text-white opacity-90"></i>
+                </div>
+                <div class="card-body">
+                    <div class="card-title text-white fw-bold">Место для вашего товара</div>
+                    <div class="price-current text-white">99 990 ₽</div>
+                    <button class="btn-card bg-white text-dark border-0 fw-bold mt-auto">Подробнее</button>
+                </div>
+            </div>
+
+            <!-- 2 -->
+            <div class="card ad-card ad-card-vibrant-2">
+                <div class="card-img-container bg-transparent d-flex align-items-center justify-content-center position-relative" style="height: 180px;">
+                    <small class="position-absolute top-0 start-0 m-3 text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Реклама</small>
+                    <i class="fa-solid fa-star fa-4x text-white opacity-90"></i>
+                </div>
+                <div class="card-body">
+                    <div class="card-title text-white fw-bold">Тут могла быть ваша реклама</div>
+                    <div class="price-current text-white">12 490 ₽</div>
+                    <button class="btn-card bg-white text-dark border-0 fw-bold mt-auto">Заказать</button>
+                </div>
+            </div>
+
+            <!-- 3 -->
+            <div class="card ad-card ad-card-vibrant-3">
+                <div class="card-img-container bg-transparent d-flex align-items-center justify-content-center position-relative" style="height: 180px;">
+                    <small class="position-absolute top-0 start-0 m-3 text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Реклама</small>
+                    <i class="fa-solid fa-percent fa-4x text-white opacity-90"></i>
+                </div>
+                <div class="card-body">
+                    <div class="card-title text-white fw-bold">Лучшее предложение</div>
+                    <div class="price-current text-white">8 900 ₽</div>
+                    <button class="btn-card bg-white text-dark border-0 fw-bold mt-auto">Купить</button>
+                </div>
+            </div>
+
+            <!-- 4 -->
+            <div class="card ad-card ad-card-vibrant-4">
+                <div class="card-img-container bg-transparent d-flex align-items-center justify-content-center position-relative" style="height: 180px;">
+                    <small class="position-absolute top-0 start-0 m-3 text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Реклама</small>
+                    <i class="fa-solid fa-fire fa-4x text-white opacity-90"></i>
+                </div>
+                <div class="card-body">
+                    <div class="card-title text-white fw-bold">Горячий товар</div>
+                    <div class="price-current text-white">5 500 ₽</div>
+                    <button class="btn-card bg-white text-dark border-0 fw-bold mt-auto">Смотреть</button>
+                </div>
+            </div>
+
+            <!-- 5 -->
+            <div class="card ad-card ad-card-vibrant-5">
+                <div class="card-img-container bg-transparent d-flex align-items-center justify-content-center position-relative" style="height: 180px;">
+                    <small class="position-absolute top-0 start-0 m-3 text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Реклама</small>
+                    <i class="fa-solid fa-gift fa-4x text-white opacity-90"></i>
+                </div>
+                <div class="card-body">
+                    <div class="card-title text-white fw-bold">Ваш продукт здесь</div>
+                    <div class="price-current text-white">89 990 ₽</div>
+                    <button class="btn-card bg-white text-dark border-0 fw-bold mt-auto">Подробнее</button>
+                </div>
+            </div>
+
+            <!-- 6 -->
+            <div class="card ad-card ad-card-vibrant-6">
+                <div class="card-img-container bg-transparent d-flex align-items-center justify-content-center position-relative" style="height: 180px;">
+                    <small class="position-absolute top-0 start-0 m-3 text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Реклама</small>
+                    <i class="fa-solid fa-gem fa-4x text-white opacity-90"></i>
+                </div>
+                <div class="card-body">
+                    <div class="card-title text-white fw-bold">Рекламное место</div>
+                    <div class="price-current text-white">120 000 ₽</div>
+                    <button class="btn-card bg-white text-dark border-0 fw-bold mt-auto">Купить</button>
+                </div>
+            </div>
+
+            <!-- 7 -->
+            <div class="card ad-card ad-card-vibrant-7">
+                <div class="card-img-container bg-transparent d-flex align-items-center justify-content-center position-relative" style="height: 180px;">
+                    <small class="position-absolute top-0 start-0 m-3 text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Реклама</small>
+                    <i class="fa-solid fa-rocket fa-4x text-white opacity-90"></i>
+                </div>
+                <div class="card-body">
+                    <div class="card-title text-white fw-bold">Продвигайте товары</div>
+                    <div class="price-current text-white">4 500 ₽</div>
+                    <button class="btn-card bg-white text-dark border-0 fw-bold mt-auto">Начать</button>
+                </div>
+            </div>
+
+            <!-- 8 -->
+            <div class="card ad-card ad-card-vibrant-8">
+                <div class="card-img-container bg-transparent d-flex align-items-center justify-content-center position-relative" style="height: 180px;">
+                    <small class="position-absolute top-0 start-0 m-3 text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Реклама</small>
+                    <i class="fa-solid fa-box-open fa-4x text-white opacity-90"></i>
+                </div>
+                <div class="card-body">
+                    <div class="card-title text-white fw-bold">Ваше объявление</div>
+                    <div class="price-current text-white">15 990 ₽</div>
+                    <button class="btn-card bg-white text-dark border-0 fw-bold mt-auto">Перейти</button>
+                </div>
+            </div>
+
+            <!-- 9 (Новая) -->
+            <div class="card ad-card ad-card-vibrant-9">
+                <div class="card-img-container bg-transparent d-flex align-items-center justify-content-center position-relative" style="height: 180px;">
+                    <small class="position-absolute top-0 start-0 m-3 text-white-50 text-uppercase fw-bold" style="font-size: 0.65rem;">Реклама</small>
+                    <i class="fa-solid fa-crown fa-4x text-white opacity-90"></i>
+                </div>
+                <div class="card-body">
+                    <div class="card-title text-white fw-bold">Здесь ваша реклама</div>
+                    <div class="price-current text-white">50 000 ₽</div>
+                    <button class="btn-card bg-white text-dark border-0 fw-bold mt-auto">Купить</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- === КОНЕЦ СЕКЦИИ === -->
 
 </main>
 
@@ -203,7 +357,7 @@
 <!-- Модальное окно Избранного -->
 <div class="modal fade" id="favoritesModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-        <div class="modal-content bg-dark border border-secondary border-opacity-25 rounded-4"> <!-- rounded-4 -->
+        <div class="modal-content bg-dark border border-secondary border-opacity-25 rounded-4">
             <div class="modal-header border-secondary border-opacity-25">
                 <h5 class="modal-title"><i class="fa-solid fa-heart text-danger me-2"></i>Избранное</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
