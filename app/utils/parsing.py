@@ -50,12 +50,18 @@ class Parser:
                 nodes => nodes.map(n => {
                     const a = n.querySelector('a.product-card__link');
                     const img = n.querySelector('img.j-thumbnail');
+                    
+                    let rating = n.querySelector('span.address-rate-mini')?.innerText.trim().replace(",", ".") || null;
+                    if (rating && !rating.includes('.')) {
+                        rating = rating + '.0';
+                    }
+                    
                     return {
                         source: "wb",
-                        name: a?.getAttribute('aria-label')?.trim() || null,
+                        name: a?.getAttribute('aria-label')?.trim() || "Товар wb",
                         price: n.querySelector('ins.price__lower-price')?.innerText.trim() || null,
-                        rating: n.querySelector('span.address-rate-mini')?.innerText.trim() || null,
-                        reviews_qty: n.querySelector('span.product-card__count')?.innerText.trim() || null,
+                        rating: rating || "0",
+                        reviews_qty: n.querySelector('span.product-card__count')?.innerText.replace(/оцен[а-я]*/, "").trim() || null,
                         link: a?.href || null,
                         img: img?.getAttribute('src') || null
                     };
@@ -141,7 +147,7 @@ class Parser:
 
                         // Шаг Б: Если не нашли, ищем самый длинный текст, исключая мусор
                         if (!name) {
-                            const candidates = Array.from(linkEl.querySelectorAll('span, div'))
+                            const candidates = Array.from(linkEl.querySelectorAll('span'))
                                 .filter(el => {
                                     const text = el.innerText.trim();
                                     return text.length > 3 &&  // Снизил порог с 10 до 3
@@ -162,11 +168,47 @@ class Parser:
 
                         // 3. КАРТИНКА
                         const imgEl = card.querySelector('img');
-
-                        // 4. РЕЙТИНГ (Заглушка)
-                        let rating = "4.9";
-                        let reviews = "0";
-
+                        
+                        // 4. РЕЙТИНГ
+                        let rating = card.querySelector('span[style*="color: var(--textPremium);"]')?.innerText?.trim();
+                        if (!rating) {
+                        // Ищем элементы, содержащие звёзды или оценки
+                            const ratingElements = Array.from(card.querySelectorAll('span'))
+                                .filter(el => {
+                                    const text = el.innerText.trim();
+                                    return text.length < 4 && /\d[\.]\d/.test(text);
+                                });
+                            
+                            if (ratingElements.length > 0) {
+                                rating = ratingElements[0].innerText.trim();
+                            }
+                            else 
+                            {
+                                rating = "0";
+                            }
+                        }
+                        
+                        // 5. КОЛИЧЕСТВО ОТЗЫВОВ
+                        let reviews = card.querySelector('span[style*="color: var(--textSecondary);"]')?.innerText?.trim();
+                        if (!reviews) {
+                        // Ищем элементы, содержащие оценки
+                            const reviewsElements = Array.from(card.querySelectorAll('span'))
+                                .filter(el => {
+                                    const text = el.innerText.trim();
+                                    return text.length > 3 && text.includes('отзыв');
+                                });
+                            
+                            if (reviewsElements.length > 0) {
+                                reviews  = reviewsElements[0].innerText;
+                                
+                            }
+                            else 
+                            {
+                                reviews = "0";
+                            }
+                        }
+                        reviews = reviews.replace(/отзыв[а-я]*/, '').trim();
+                        
                         seenLinks.add(link);
                         results.push({
                             source: "ozon",
