@@ -33,9 +33,14 @@ async def read_root(request: Request):
     return HTMLResponse(content=html_content)
 
 @app.get("/search/{query}")
-async def search_query(query: str):
-    return await app.state.parser.search(query)
+async def search_query(query: str, page: int = 1, no_cache: bool = False):
+    page = max(page, 1)
+    return await app.state.parser.search(query, page, no_cache=no_cache)
 
 
+@app.post("/cache/clear")
+async def clear_cache():
+    """Эндпоинт для ручной очистки кэша на сервере."""
+    return await app.state.parser.clear_cache()
 
 #docker-compose up --build    <---- первый раз (для сборки докера) аня...

@@ -18,6 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const errorState = document.getElementById("errorState");
     const retryBtn = document.getElementById("retryBtn");
     const backToTopBtn = document.getElementById("backToTop");
+    const loadMoreWrapper = document.getElementById("loadMoreWrapper");
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
 
     const totalProductsEl = document.getElementById("totalProducts");
     const avgPriceEl = document.getElementById("avgPrice");
@@ -26,22 +28,44 @@ document.addEventListener("DOMContentLoaded", () => {
     const toggleViewBtn = document.getElementById("toggleView");
     const exportBtn = document.getElementById("exportBtn");
 
+    // === УПРАВЛЕНИЕ ТЕМАМИ ===
+    let currentTheme = localStorage.getItem("app_theme") || "cosmic";
+    
+    function applyTheme(theme) {
+        document.body.setAttribute("data-theme", theme);
+        const themeBtn = document.getElementById("themeToggleBtn");
+        if (themeBtn) {
+            themeBtn.innerHTML = theme === "cosmic" 
+                ? '<i class="fa-solid fa-moon"></i> Cosmic' 
+                : '<i class="fa-solid fa-pen-nib"></i> Ink';
+        }
+    }
+    
+
+    // Если кнопки нет в HTML, создадим её динамически рядом с кнопкой экспорта
+    if (!document.getElementById("themeToggleBtn") && exportBtn) {
+        const themeBtn = document.createElement("button");
+        themeBtn.id = "themeToggleBtn";
+        themeBtn.className = "btn btn-outline-light ms-2";
+        themeBtn.title = "Переключить тему";
+        exportBtn.parentNode.insertBefore(themeBtn, exportBtn.nextSibling);
+    }
+
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    applyTheme(currentTheme);
+
     // === ИЗБРАННОЕ ===
     const favoritesList = document.getElementById("favoritesList");
     const favoritesEmpty = document.getElementById("favoritesEmpty");
     const favCountBadge = document.getElementById("favCountBadge");
 
-    // Инициализация избранного
     let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 
     function updateFavoritesUI() {
-        // Обновляем бейдж
         if (favCountBadge) {
             favCountBadge.textContent = favorites.length;
             favCountBadge.style.display = favorites.length > 0 ? 'inline-block' : 'none';
         }
-
-        // Обновляем список в модальном окне
         if (favoritesList && favoritesEmpty) {
             if (favorites.length === 0) {
                 favoritesList.innerHTML = '';
@@ -52,12 +76,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 favoritesList.style.display = 'grid';
                 favoritesList.innerHTML = favorites.map(item => getGridHtml(item, 0, true)).join('');
 
-                // Вешаем обработчики на сердечки в модалке (УДАЛЕНИЕ ПРИ КЛИКЕ)
                 favoritesList.querySelectorAll('.favorite-btn').forEach(btn => {
                     btn.onclick = (e) => {
                         e.preventDefault();
                         const link = btn.dataset.link;
-                        // Находим товар и удаляем его
                         toggleFavorite(favorites.find(p => p.link === link));
                     };
                 });
@@ -80,13 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem('favorites', JSON.stringify(favorites));
         updateFavoritesUI();
 
-        // Обновляем иконку во всех местах (в списке-плитке и в списке-строках)
         const btns = document.querySelectorAll(`.favorite-btn[data-link="${product.link}"], .favorite-btn-list[data-link="${product.link}"]`);
-
         btns.forEach(btn => {
             const isFav = favorites.some(p => p.link === product.link);
-
-            // Если это кнопка на плитке (Grid) или в модалке
             if (btn.classList.contains('favorite-btn')) {
                 if(isFav) {
                     btn.classList.add('active');
@@ -96,8 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
                 }
             }
-
-            // Если это кнопка в списке (List View)
             if (btn.classList.contains('favorite-btn-list')) {
                 if(isFav) {
                     btn.classList.remove('btn-outline-danger');
@@ -112,54 +128,98 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    updateFavoritesUI(); // Первый запуск
+    updateFavoritesUI();
 
-    // === СОВЕТЫ ===
+    // === СОВЕТЫ ПРИ ЗАГРУЗКЕ ===
     const tips = [
         "Совет: Сортируйте отзывы по дате — качество товара часто меняется от партии к партии.",
         "Лайфхак: Смотрите негативные отзывы первыми — они быстрее покажут реальные проблемы.",
-        "Факт: Одинаковый товар у разных продавцов может отличаться по комплектации, свойствам и т.д.",
         "Факт: Утром (6–9) и поздно ночью цены обновляются чаще всего.",
-        "Совет: Проверяйте дату отзывов — старые могут относиться к другой версии товара.",
         "Лайфхак: Один и тот же товар часто дешевле в другом цвете или комплекте.",
-        "Факт: WB и Ozon могут давать разные цены одному и тому же пользователю.",
-        "Лайфхак: Проверяйте описание внизу карточки — там прячут важные ограничения.",
-        "Факт: 'Оригинал' не всегда означает официальный бренд — проверяйте продавца.",
-        "Совет: Смотрите чаще отзывы — фото магазина часто обманчивы.",
-        "Факт: Высокий рейтинг при малом числе отзывов — повод насторожиться.",
-        "Лайфхак: Сравнивайте цену с прошлой неделей — скидка может быть фейковой.",
-        "Факт: Бесплатный возврат — это часть цены товара, она уже заложена.",
-        "Подождите, мы ищем самые выгодные предложения...",
-        "Факт: Самые выгодные скидки часто появляются без уведомлений."
+        "Факт: WB и Ozon могут давать разные цены одному и тому же пользователю."
     ];
     let tipInterval;
 
-    // === ИСТОРИЯ ПОИСКА ===
-    let searchHistory = JSON.parse(localStorage.getItem("search_history") || "[]");
+    // === УПРАВЛЕНИЕ ИСТОРИЕЙ ПОИСКА ===
+    let searchHistory = [];
+    try {
+        searchHistory = JSON.parse(localStorage.getItem("search_history") || "[]");
+        if (!Array.isArray(searchHistory)) searchHistory = [];
+    } catch {
+        searchHistory = [];
+    }
 
     function renderHistory() {
         if (!historyContainer) return;
         if (searchHistory.length === 0) {
-            historyContainer.innerHTML = "";
+            historyContainer.innerHTML = '<span class="text-muted small">История пуста</span>';
             return;
         }
-        historyContainer.innerHTML = searchHistory.map(tag =>
-            `<span class="history-tag">${tag}</span>`
-        ).join('');
 
-        document.querySelectorAll(".history-tag").forEach(el => {
-            el.onclick = () => {
+        // Контейнер для тегов + кнопка очистки
+        let html = '<div class="d-flex flex-wrap align-items-center gap-2">';
+        searchHistory.forEach(tag => {
+            html += `<span class="history-tag">${tag}</span>`;
+        });
+        html += `<button id="clearHistoryBtn" class="btn btn-sm btn-link text-danger p-0 ms-2" style="text-decoration:none; font-size:0.8rem;"><i class="fa-solid fa-trash-can"></i> Очистить историю</button>`;
+        html += `<button id="clearCacheBtn" class="btn btn-sm btn-link text-warning p-0 ms-2" style="text-decoration:none; font-size:0.8rem;" title="Очистить кэш на сервере"><i class="fa-solid fa-database"></i> Очистить кэш</button>`;
+        html += '</div>';
+        
+        historyContainer.innerHTML = html;
+
+        // Клик по тегам
+        historyContainer.querySelectorAll(".history-tag").forEach(el => {
+            el.onclick = (e) => {
                 input.value = el.innerText;
                 toggleClearBtn();
-                search(el.innerText);
+                search(el.innerText, e.ctrlKey || e.shiftKey);
             };
         });
-    }
 
+        // Клик по кнопке очистки истории
+        const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+        if (clearHistoryBtn) {
+            clearHistoryBtn.onclick = () => {
+                searchHistory = [];
+                localStorage.setItem("search_history", JSON.stringify([]));
+                renderHistory();
+                showToast("История поиска очищена");
+            };
+        }
+
+        // Клик по кнопке очистки кэша
+        const clearCacheBtn = document.getElementById("clearCacheBtn");
+        if (clearCacheBtn) {
+            clearCacheBtn.onclick = async () => {
+                clearCacheBtn.disabled = true;
+                try {
+                    const res = await fetch('/cache/clear', { method: 'POST' });
+                    if (res.ok) {
+                        showToast("Кэш на сервере успешно очищен");
+                    } else {
+                        showToast("Ошибка при очистке кэша");
+                    }
+                } catch (e) {
+                    showToast("Ошибка сети при очистке кэша");
+                } finally {
+                    clearCacheBtn.disabled = false;
+                }
+            };
+        }
+    }
+    
     function saveHistory(query) {
-        if (!query) return;
-        searchHistory = [query, ...searchHistory.filter(item => item !== query)].slice(8);
-        localStorage.setItem("search_history", JSON.stringify(searchHistory));
+        const normalizedQuery = query?.trim();
+        if (!normalizedQuery) return;
+        searchHistory = [
+            normalizedQuery,
+            ...searchHistory.filter(item => item.toLowerCase() !== normalizedQuery.toLowerCase())
+        ].slice(0, 8);
+        try {
+            localStorage.setItem("search_history", JSON.stringify(searchHistory));
+        } catch (e) {
+            console.warn("Search history was not saved", e);
+        }
         renderHistory();
     }
 
@@ -185,15 +245,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // === БЫСТРЫЙ ПОИСК ===
     document.querySelectorAll(".quick-search").forEach(btn => {
-        btn.onclick = () => {
+        btn.onclick = (e) => {
             if (input) { input.value = btn.dataset.query; toggleClearBtn(); }
-            search(btn.dataset.query);
+            search(btn.dataset.query, e.ctrlKey || e.shiftKey);
         };
     });
 
-    // === СОСТОЯНИЕ ===
+    // === ТЕКУЩЕЕ СОСТОЯНИЕ ===
     let products = [];
     let isLoading = false;
+    let isLoadingMore = false;
+    let currentPage = 1;
+    let currentQuery = "";
+    let hasMoreResults = false;
     let currentMarket = "all";
     let currentView = "grid";
 
@@ -208,18 +272,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return typeof val === 'number' ? val : parseInt(val?.toString().replace(/\D/g, "") || 0);
     }
 
+    // Тосты оповещений
     function showToast(msg) {
         const toastContainer = document.getElementById("toastContainer");
         if (!toastContainer) return;
-        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
-            const el = document.createElement("div");
-            el.className = "toast show align-items-center text-bg-primary border-0 mb-2";
-            el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
-            toastContainer.appendChild(el);
-            setTimeout(() => el.remove(), 3000);
-        }
+        const el = document.createElement("div");
+        el.className = "toast show align-items-center text-bg-primary border-0 mb-2";
+        el.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+        toastContainer.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
     }
 
+    // Плавная анимация изменения цифр в блоке статистики
     function animateValue(obj, start, end, duration, isPrice = false) {
         if(!obj) return;
         let startTimestamp = null;
@@ -235,12 +299,19 @@ document.addEventListener("DOMContentLoaded", () => {
         window.requestAnimationFrame(step);
     }
 
-    // === ЛОГИКА ПОИСКА ===
+    // === ЛОГИКА СТАТИСТИКИ ===
     function updateStats() {
         if(!totalProductsEl) return;
-        const valid = products.filter(p => toNum(p.price) > 0);
+        
+        // Фильтруем массив в зависимости от выбранного маркетплейса
+        let filtered = products;
+        if (currentMarket !== 'all') {
+            filtered = products.filter(p => p.source === currentMarket);
+        }
+
+        const valid = filtered.filter(p => toNum(p.price) > 0);
         const currentTotal = parseInt(totalProductsEl.textContent) || 0;
-        const targetTotal = valid.length;
+        const targetTotal = filtered.length; // Фиксируем корректное число для плашки "найдено"
 
         let targetAvg = 0, targetMin = 0;
         if (valid.length) {
@@ -249,31 +320,96 @@ document.addEventListener("DOMContentLoaded", () => {
             targetMin = Math.min(...prices);
         }
 
-        animateValue(totalProductsEl, currentTotal, targetTotal, 1000, false);
-        animateValue(avgPriceEl, 0, targetAvg, 1000, true);
-        animateValue(minPriceEl, 0, targetMin, 1000, true);
+        animateValue(totalProductsEl, currentTotal, targetTotal, 600, false);
+        animateValue(avgPriceEl, 0, targetAvg, 600, true);
+        animateValue(minPriceEl, 0, targetMin, 600, true);
     }
 
-    async function search(query) {
+    function setLoadMoreVisible(visible) {
+        if (!loadMoreWrapper) return;
+        // Требование 1: Показываем блок только при наличии первой пачки данных и флага доступности
+        loadMoreWrapper.style.display = (visible && products.length > 0) ? 'block' : 'none';
+        if (loadMoreBtn && !isLoadingMore) loadMoreBtn.disabled = !visible;
+    }
+
+    function setLoadMoreLoading(loading) {
+        if (!loadMoreBtn) return;
+        const text = loadMoreBtn.querySelector('.load-more-text');
+        const spinner = loadMoreBtn.querySelector('.load-more-spinner');
+        loadMoreBtn.disabled = loading || !hasMoreResults || !currentQuery;
+        if (text) text.textContent = loading ? 'Загружаем...' : 'Загрузить ещё';
+        if (spinner) spinner.style.display = loading ? 'inline-block' : 'none';
+    }
+
+    async function fetchProducts(query, page, bypassCache = false) {
+        let url = `/search/${encodeURIComponent(query)}?page=${page}`;
+        if (bypassCache) {
+            url += '&no_cache=true';
+        }
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Ошибка сети");
+        return await res.json();
+    }
+
+    function mergeProducts(newProducts) {
+        const seenLinks = new Set(products.map(p => p.link).filter(Boolean));
+        const unique = newProducts.filter(item => {
+            if (!item || item.error) return false;
+            if (!item.link) return true;
+            if (seenLinks.has(item.link)) return false;
+            seenLinks.add(item.link);
+            return true;
+        });
+        products.push(...unique);
+        return unique;
+    }
+
+    // ПЕРВЫЙ ПОИСК
+    async function search(query, bypassCache = false) {
         if (!query && input) query = input.value.trim();
         if (!query) return showToast("Введите запрос");
         if (isLoading) return;
 
         isLoading = true;
-        saveHistory(query);
+        currentPage = 1;
+        currentQuery = query;
+        hasMoreResults = false;
+        products = []; // Очищаем старые результаты
 
-        // UI Updates: Показываем скелетоны
+        if (bypassCache) {
+            showToast("Запрос без кэша (Ctrl/Shift + Enter)");
+        }
+
+        // UI State
         if(resultsContainer) resultsContainer.style.display = 'none';
         if(loadingState) loadingState.style.display = 'block';
         if(emptyState) emptyState.style.display = 'none';
         if(errorState) errorState.style.display = 'none';
+        
+        // Скрываем кнопку подгрузки до окончания первого запроса (Требование 1)
+        setLoadMoreVisible(false);
 
-        // Генерируем 24 скелетона (чтобы хватало на большие экраны при уменьшении масштаба)
-        if(skeletonGrid) {
-            skeletonGrid.innerHTML = Array(27).fill('<div class="skeleton-card"></div>').join('');
-        }
+        // СТАЛО: Динамический расчет скелетонов на 3 ряда
+// НАДЕЖНЫЙ АДАПТИВНЫЙ РАСЧЕТ СКЕЛЕТОНОВ НА 3 РЯДА
+        if (skeletonGrid) {
+            // Берём базовые параметры прямо из CSS
+            const minCardWidth = 180; // Минимальная ширина карточки из minmax(180px, 1fr)
+            const gap = 16;           // Отступ сетки gap: 16px
+    
+            // Получаем текущую ширину контейнера на экране (с учетом масштаба и разрешения)
+            const containerWidth = skeletonGrid.getBoundingClientRect().width;
+            
+            // Рассчитываем, сколько колонок физически помещается в контейнер
+            // Формула учитывает, что отступов (gap) всегда на один меньше, чем карточек
+            const itemsPerRow = Math.floor((containerWidth + gap) / (minCardWidth + gap)) || 1;
+            
+            // Нам нужно строго 3 ряда скелетонов
+            const totalSkeletons = itemsPerRow * 3;
+            
+            // Рендерим ровно столько карточек, сколько заполнит видимую область без дыр
+            skeletonGrid.innerHTML = Array(totalSkeletons).fill('<div class="skeleton-card"></div>').join('');
+}
 
-        // Запуск советов
         if (loadingTip) {
             let i = 0;
             loadingTip.textContent = tips[0];
@@ -284,47 +420,89 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const res = await fetch(`/search/${encodeURIComponent(query)}`);
-            if (!res.ok) throw new Error("Ошибка сети");
-            products = await res.json();
+            const data = await fetchProducts(query, currentPage, bypassCache);
+            products = data.filter(item => !item?.error);
+            hasMoreResults = products.length > 0;
+            saveHistory(query);
 
-            updateStats();
-            render();
+            render(); // Отрендерит сетку с сортировкой
+            updateStats(); // Перепишет плашки статистики
+            setLoadMoreVisible(hasMoreResults); // Включит кнопку, если товары есть
             showToast(`Найдено ${products.length} товаров`);
 
         } catch (e) {
             console.error(e);
-            loadingState.style.display = 'none';
-            errorState.style.display = 'block';
+            if(loadingState) loadingState.style.display = 'none';
+            if(errorState) errorState.style.display = 'block';
         } finally {
             isLoading = false;
             if(tipInterval) clearInterval(tipInterval);
         }
     }
 
+    // ПОДГРУЗКА ПРИ НАЖАТИИ "ЗАГРУЗИТЬ ЕЩЕ"
+    async function loadMore() {
+        if (!currentQuery || isLoading || isLoadingMore || !hasMoreResults) return;
+
+        isLoadingMore = true;
+        setLoadMoreLoading(true);
+
+        try {
+            const nextPage = currentPage + 1;
+            const fetched = await fetchProducts(currentQuery, nextPage);
+            const unique = mergeProducts(fetched);
+
+            if (unique.length === 0) {
+                hasMoreResults = false;
+                setLoadMoreVisible(false);
+                showToast("Больше товаров не найдено");
+                return;
+            }
+
+            currentPage = nextPage;
+            
+            // Требование 3: Сначала заново рендерим (внутри отработает сортировка возрастания цены)
+            render(); 
+            // Требование 3: Пересчитываем и переписываем плашки ("найдено товаров", "мин. цена")
+            updateStats(); 
+            
+            showToast(`Добавлено и отсортировано ${unique.length} товаров`);
+        } catch (e) {
+            console.error(e);
+            showToast("Не удалось загрузить ещё");
+        } finally {
+            isLoadingMore = false;
+            setLoadMoreLoading(false);
+        }
+    }
+
+    // РЕНДЕРИНГ И СОРТИРОВКА
     function render() {
-        let list = products;
+        let list = [...products]; // Делаем копию массива для безопасных манипуляций
         if (currentMarket !== 'all') list = list.filter(p => p.source === currentMarket);
 
         const prices = list.map(p => toNum(p.price)).filter(p => p > 0);
         const minPrice = prices.length ? Math.min(...prices) : 0;
 
-        if(sortSelect) {
-            const mode = sortSelect.value;
-            list.sort((a,b) => {
-                const pa = toNum(a.price), pb = toNum(b.price);
-                if (mode === 'price_asc') return pa - pb;
-                if (mode === 'price_desc') return pb - pa;
-                if (mode === 'rating_desc') return (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0);
-                return 0;
-            });
-        }
+        // Сортировка (по умолчанию или по выбору пользователя всегда будет сохранять порядок цен)
+        const mode = sortSelect ? sortSelect.value : 'price_asc';
+        list.sort((a, b) => {
+            const pa = toNum(a.price), pb = toNum(b.price);
+            if (mode === 'price_asc') {
+                if (pa === 0 && pb !== 0) return 1;
+                if (pb === 0 && pa !== 0) return -1;
+                return pa - pb;
+            }
+            if (mode === 'price_desc') return pb - pa;
+            if (mode === 'rating_desc') return (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0);
+            return 0;
+        });
 
         if(loadingState) loadingState.style.display = 'none';
 
         if (list.length === 0) {
-            resultsContainer.style.display = 'none';
-            emptyState.style.display = 'block';
+            if(resultsContainer) resultsContainer.style.display = 'none';
+            if(emptyState) emptyState.style.display = 'block';
             if(resultsCount) resultsCount.textContent = "";
             return;
         }
@@ -334,12 +512,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if(resultsContainer) {
             resultsContainer.style.display = currentView === 'grid' ? 'grid' : 'flex';
             resultsContainer.className = currentView === 'grid' ? 'products-grid' : 'd-flex flex-column gap-3';
+            resultsContainer.innerHTML = '';
+            
+            // Вставляем отсортированные элементы в DOM
+            appendProducts(list, minPrice);
 
-            resultsContainer.innerHTML = list.map(item =>
-                currentView === 'grid' ? getGridHtml(item, minPrice) : getListHtml(item, minPrice)
-            ).join('');
-
-            // Навешиваем события на сердечки (поддерживаем и Grid и List классы)
             document.querySelectorAll('.favorite-btn, .favorite-btn-list').forEach(btn => {
                 btn.onclick = (e) => {
                     e.preventDefault();
@@ -350,8 +527,28 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
+        updateResultsCount();
+    }
+
+    function appendProducts(items, minPrice) {
+        if (!resultsContainer) return;
+        const template = document.createElement('template');
+
+        items.forEach(item => {
+            template.innerHTML = currentView === 'grid' ? getGridHtml(item, minPrice) : getListHtml(item, minPrice);
+            const card = template.content.firstElementChild;
+            if (card) {
+                resultsContainer.appendChild(card);
+            }
+        });
+    }
+
+    function updateResultsCount() {
+        if(!resultsCount) return;
+        let list = products;
+        if (currentMarket !== 'all') list = list.filter(p => p.source === currentMarket);
         const mNames = { 'all': 'Все площадки', 'wb': 'Wildberries', 'ozon': 'Ozon' };
-        if(resultsCount) resultsCount.innerHTML = `<span class="badge bg-secondary">${list.length}</span> <small class="text-muted">товаров (${mNames[currentMarket]})</small>`;
+        resultsCount.innerHTML = `<span class="badge bg-secondary">${list.length}</span> <small class="text-muted">товаров (${mNames[currentMarket]})</small>`;
     }
 
     // === HTML ГЕНЕРАТОРЫ ===
@@ -366,7 +563,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const bestPriceBadge = (!isModal && priceNum > 0 && priceNum === minPrice)
             ? `<div class="best-price-label"><i class="fa-solid fa-fire"></i> Лучшая цена</div>` : '';
 
-        // Проверяем избранное
         const isFav = favorites.some(fav => fav.link === p.link);
         const heartClass = isFav ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
         const btnActiveClass = isFav ? 'active' : '';
@@ -434,19 +630,65 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>`;
     }
 
-    // === СОБЫТИЯ ===
+    // === НАВЕШИВАНИЕ СОБЫТИЙ ===
     renderHistory();
-    if(searchBtn) searchBtn.onclick = () => search();
-    if(input) { input.addEventListener("keydown", (e) => { if (e.key === "Enter") search(); }); input.disabled = false; input.readOnly = false; }
-    if(retryBtn) retryBtn.onclick = () => search();
-    if(sortSelect) sortSelect.onchange = render;
-    if(toggleViewBtn) toggleViewBtn.onclick = () => { currentView = currentView === 'grid' ? 'list' : 'grid'; toggleViewBtn.innerHTML = currentView === 'grid' ? '<i class="fa-solid fa-th"></i>' : '<i class="fa-solid fa-list"></i>'; render(); };
-    if(filterButtons) filterButtons.forEach(btn => { btn.onclick = () => { filterButtons.forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentMarket = btn.dataset.market; render(); } });
-    if(exportBtn) exportBtn.onclick = () => {
-        if(!products.length) return showToast("Нет данных");
-        let csv = "Магазин;Название;Цена\n" + products.map(p => `${p.source};${p.name};${p.price}`).join("\n");
-        const blob = new Blob([csv], {type: 'text/csv'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'export.csv'; a.click();
+    if(searchBtn) searchBtn.onclick = (e) => search(null, e.ctrlKey || e.shiftKey);
+    if(input) { 
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                search(null, e.ctrlKey || e.shiftKey);
+            }
+        });
+        input.disabled = false; 
+        input.readOnly = false; 
+    }
+    if(retryBtn) retryBtn.onclick = (e) => search(currentQuery, e.ctrlKey || e.shiftKey);
+    if(loadMoreBtn) loadMoreBtn.onclick = loadMore;
+    
+    if(sortSelect) {
+        sortSelect.onchange = () => {
+            render();
+            updateStats();
+        };
+    }
+    
+    if(toggleViewBtn) {
+        toggleViewBtn.onclick = () => { 
+            currentView = currentView === 'grid' ? 'list' : 'grid'; 
+            toggleViewBtn.innerHTML = currentView === 'grid' ? '<i class="fa-solid fa-th"></i>' : '<i class="fa-solid fa-list"></i>'; 
+            render(); 
+        };
+    }
+    
+    if(filterButtons) {
+        filterButtons.forEach(btn => { 
+            btn.onclick = () => { 
+                filterButtons.forEach(b => b.classList.remove('active')); 
+                btn.classList.add('active'); 
+                currentMarket = btn.dataset.market; 
+                render(); 
+                updateStats(); // Обновляем плашки под выбранный фильтр маркетплейса
+            } 
+        });
+    }
+    
+    if(exportBtn) {
+        exportBtn.onclick = () => {
+            if(!products.length) return showToast("Нет данных");
+            // Багфикс: очищаем названия от точек с запятой, чтобы не сломать CSV-структуру
+            let csv = "Магазин;Название;Цена\n" + products.map(p => `${p.source};${p.name.replace(/;/g, ' ')};${p.price}`).join("\n");
+            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'export.csv'; a.click();
+        }
+    }
+    
+    if(themeToggleBtn) {
+        themeToggleBtn.onclick = () => {
+            currentTheme = currentTheme === "cosmic" ? "ink" : "cosmic";
+            localStorage.setItem("app_theme", currentTheme);
+            applyTheme(currentTheme);
+        };
     }
 });
